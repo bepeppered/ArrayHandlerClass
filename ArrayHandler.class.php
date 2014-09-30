@@ -1,96 +1,75 @@
 <?php
  
-/*********************
- * ARRAYHANDLER class
- *********************
- *   This class handles and manage array, and make a few operations.
+/**
+ * This class handles and manage array, and make a few operations with them.
  *
- *   @author David Pauli
+ * Array handling in PHP is not that easy than you need it. This class helps
+ * to optimize this array handling. All functions are static to use them
+ * without making an object, so you can use ArrayHandler::function().
  *
- *   Version
- *   *******
- *      V1. version with following functions
- *		- mergeRecursive()
- *		  This function will merge 2 arrays to 1 (without reindex all indizes).
- *		- feaze()
- *		  Expands an 1-dimensional array to a more-dimensional array.
- *		- getDimension()
- *		  Gets the dimension of an array.
- *		- containsOnlyArrays()
- *		  Check if there are only arrays (no strings/ints/something like that) in the array.
- *		- clean()
- *		  clean array, so there is only the structure without values
- *		- ksortRecursive()
- *		  sorts the keys in right order recursive
- *		- searchKey()
- *		  search an array key recursive
- *		- printArray()
- *		  prints an array with some possible options
- ********************/
+ * @author David Pauli
+ * @license GNU GPLv3
+ * @link http://www.david-pauli.de/projekte/effizient-mit-arrays-umgehen german description of class
+ * @version 140930
+ */
  
 class ArrayHandler {
  
-	/*******************
-	 * mergeRecursive()
-	 *******************
-	 *   merge array recursivly WITHOUT reindex all indizes
-	 *   Why not use PHP intern function array_merge_recursive (see www.php.net/array_merge_recursive)?
-	 *   array_merge_recursive will overwrite numeric keys (reindex keys).
+	/**
+	 * Merge two arrays recursively without reindex all indices.
 	 *
-	 *   @param
-	 *      array array1:	first array
-	 *      array array2:	second array
+	 * This function makes a new array with two given arrays. The
+     * PHP given intern function array_merge_recursive
+     * (see www.php.net/array_merge_recursive) overwrites the
+     * numeric key (reindex keys).
 	 *
-	 *   @return
-	 *      array merge:	merged result
-	 *
-	 *   @origin
-	 *      http://de3.php.net/manual/en/function.array-merge-recursive.php#106985
+     * @access public
+     * @param array $firstArray This is the first array to merge.
+     * @param array $secondArray This is the second array to merge.
+     * @return array The merged result.
+	 * @since 140930
+	 * @static
+	 * @version 140930
 	 */
-	function mergeRecursive($array1, $array2) {
- 
-		$arrays = array($array1, $array2);
+	function mergeRecursive($firstArray, $secondArray) {
+
+        $arrays = array($firstArray, $secondArray);
 		$base = array_shift($arrays);
  
 		foreach ($arrays as $array) {
-			reset($base); //important
+			reset($base);
 			while (list($key, $value) = @each($array)) {
 				if (is_array($value) && @is_array($base[$key])) {
-					$base[$key] = $this->mergeRecursive($base[$key], $value);
+					$base[$key] = self::mergeRecursive($base[$key], $value);
 				} else {
 					$base[$key] = $value;
 				}
 			}
 		}
- 
 		return $base;
- 
 	}
  
-	/**********
-	 * feaze()
-	 **********
-	 *   Makes an 1-dimensional array to an more-dimensional array.
-	 *   You can give a value for fill the last deepest array with this content.
-	 *
-	 *   @param
-	 *      array path:	path to feaze (one dimensional array)
-	 *      mixed value:	insert a value in last item
-	 *
-	 *   @return
-	 *      array feaze:	more-dimensional array
-	 *
-	 *   @example
-	 *      sending an 1-dimensional array path like
-	 *         [key1]
-	 *         [key2]
-	 *         [key3]
-	 *      and value
-	 *         value = "test"
-	 *      makes a more-dimensional array like
-	 *         [key1]
-	 *            [key2]
-	 *               [key3] = test
+	/**
+     * Makes an 1-dimensional array to an more-dimensional array.
+     *
+     * This function helps you to explode a flat array make more dimensional.
+     * Sending an 1-dimensional array like
+     *    [key1]
+     *    [key2]
+     *    [key3]
+     *    value = "test"
+     *  makes a more-dimensional array like
+     *    [key1]
+     *       [key2]
+     *          [key3] = test
+     *
+     * @access public
+     * @param array $path This is the flat 1-dimensional array.
+     * @param mixed $value You can set an element in last array. This parameter is optional.
+     * @return array The more-dimensional array.
+     * @since 140930
+     * @static
+     * @version 140930
 	 */
 	function feaze($path, $value="") {
  
@@ -99,36 +78,32 @@ class ArrayHandler {
 		if($path[0]==="") $path = array_splice($path, 1);
  
 		if(isset($path[0]) && isset($path[1])) {
- 
 			$parameter = array_splice($path, 1);
-			$result[$path[0]] = $this->feaze($parameter, $value);
- 
+			$result[$path[0]] = self::feaze($parameter, $value);
 		}
 		else if(isset($path[0])) {
 			$result[$path[0]] = $value;
 		}
  
 		return $result;
- 
 	}
  
-	/*****************
-	 * getDimension()
-	 *****************
-	 *   gets the dimension of an array
-	 *
-	 *   @param
-	 *      array array:	array to get the dimension
-	 *
-	 *   @return
-	 *      int dimension:	number of dimension
-	 *
-	 *   @example
-	 *      The array
-	 *         [var1]
-	 *            [var2]
-	 *               [var3]
-	 *      has the dimension of 3.
+	/**
+	 * Gets the dimension of an array.
+     *
+     * The dimension is the deepness is countable with this function.
+     * The array
+     *    [var1]
+     *       [var2]
+     *          [var3]
+     * has the dimension of 3.
+     *
+     * @access public
+     * @param array $array The array which dimension should be counted.
+     * @return int Which is the dimension of the array.
+     * @since 140930
+     * @static
+     * @version 140930
 	 */
 	function getDimension($array) {
  
@@ -137,102 +112,98 @@ class ArrayHandler {
 		if(is_Array($array)) {
 			$dimension++;
 			foreach($array as $key => $value) {
- 
 				if(is_Array($array[$key])) {
-					$dimension = $this->getDimension($array[$key])+$dimension;
+					$dimension = self::getDimension($array[$key])+$dimension;
 				}
-				$this->getDimension($array[$key])+$dimension;
+				return self::getDimension($array[$key])+$dimension;
 			}
 		}
 		return $dimension;
- 
 	}
  
-	/***********************
-	 * containsOnlyArrays()
-	 ***********************
-	 *   check whether there are only arrays in a array.
-	 *
-	 *   @param
-	 *      array array:	array to check
-	 *
-	 *   @return
-	 *      boolean: are there only arrays
+	/**
+	 * Check whether there are only arrays in a array.
+     *
+     * With this function you can check a flat 1-dimensional array if
+     * there are only array in there.
+     *
+     * @access public
+     * @param array $array The array which you want to check.
+     * @return boolean True means there are only arrays in this array.
+     * @since 140930
+     * @static
+     * @todo Make this function recursive.
+     * @version 140930
 	 */
 	function containsOnlyArrays($array) {
- 
 		foreach($array as &$value) {
- 
 			if(!is_Array($value)) return false;
 		}
- 
 		return true;
 	}
  
-	/**********
-	 * clean()
-	 **********
-	 *   cleans an array: deletes the values but let the keys.
-	 *   All ints are 0, all booleans are false, all strings are ""
-	 *
-	 *   @param
-	 *      array array:	array to clean
-	 *
-	 *   @return
-	 *	array array:	cleaned array
-	 *
-	 *   @example
-	 *      If the posted array is
-	 *         [number1] = "hey"
-	 *         [intintint] = 123
-	 *      the returned array will be
-	 *         [number1] = ""
-	 *         [intintint] = 0
+	/**
+	 * Clean an array.
+     *
+     * Delete all values of the array recursive. The function
+     * change not the value of the keys. All integer will
+     * change to 0, all boolean will be false, all strings
+     * will be "".
+     *
+     * @access public
+     * @param array $array The array which should be cleaned.
+     * @return array Returns the cleaned array.
+     * @since 140930
+     * @static
+     * @version 140930
 	 */
 	function clean($array) {
  
 		foreach($array as &$value) {
- 
-			if(is_Array($value)) $value = $this->clean($value);
+			if(is_Array($value)) $value = self::clean($value);
 			else if(is_Int($value)) $value = 0;
 			else if(is_Bool($value)) $value = false;
 			else $value = "";
 		}
 		return $array;
- 
 	}
- 
-	/*******************
-	 * ksortRecursive()
-	 *******************
-	 *   sorts the keys of an array recursivly
-	 *
-	 *   @param
-	 *      array	array to sort
+
+	/**
+     * Sorts the keys of an array recursive.
+     *
+     * The PHP intern function ksort only sorts in one dimension. This
+     * function sorts an array in each deep.
+     *
+     * @access public
+     * @param array $array The array which keys you want to recursive sort.
+     * @return array Returns the sorted array.
+     * @since 140930
+     * @static
+     * @version 140930
 	 */
-	function ksortRecursive(&$array) {
- 
+	function kSortRecursive($array) {
+
 		ksort($array);
 		foreach($array as &$value) {
  
-			if(is_Array($value) && !empty($value)) $this->ksortRecursive($value);
+			if(is_Array($value) && !empty($value)) self::ksortRecursive($value);
 		}
- 
 		return $array;
- 
 	}
  
-	/**************
-	 * searchKey()
-	 **************
-	 *   search a array key recursive, returns true or false
-	 *
-	 *   @param
-	 *      string needle:	string to search
-	 *	array array:	array where to search
-	 *
-	 *   @return
-	 *	boolean:	string found/not found as array key
+	/**
+     * Search a  key of an array recursive.
+     *
+     * If there the searched key is found in array you will get
+     * true.
+     *
+     * @access public
+     * @param string $needle This is the string you want to search.
+     * @param array $array This is the array you want to search.
+     * @return boolean Returns true if you find this needle.
+     * @since 140930
+     * @static
+     * @version 140930
 	 */
 	function searchKey($needle, $array) {
  
@@ -240,36 +211,32 @@ class ArrayHandler {
 		if($result) return true;
  
 		foreach($array as &$value) {
- 
-			if(is_Array($value)) $result = $this->searchKey($needle, $value);
+			if(is_Array($value)) $result = self::searchKey($needle, $value);
 			if($result) return true;
 		}
- 
 		return false;
- 
 	}
  
- 
- 
-	/**************
-	* printArray()
-	 **************
-	*   prints an array
-	*   
-	* @param:
-	*   array array:	array to print
-	*   int mode:		mode to print
-	*      0 - print_r
-	*      1 - var_dump
-	*/
- 
+	/**
+	 * Prints an array on display.
+     *
+     * There are two options to print an array. You can print
+     * with print_r() or var_dump().
+	 *
+     * @access public
+     * @param array $array This array should be printed.
+     * @param int $mode Print it with print_r (0) or var_dump (1).
+     * @return void
+     * @since 140930
+     * @static
+     * @version 140930
+	 */
 	function printArray($array, $mode=0) {
 		echo "<pre>";
 		if($mode==0) print_r($array);
 		else if($mode==1) var_dump($array);
 		echo "</pre>";
 	}
- 
 }
- 
+
 ?>
